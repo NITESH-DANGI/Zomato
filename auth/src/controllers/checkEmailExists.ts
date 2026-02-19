@@ -1,5 +1,5 @@
-import TryCatch from "../middlewares/trycatch";
-import User from "../model/User";
+import TryCatch from "../middlewares/trycatch.js";
+import User from "../model/User.js";
 
 export const checkEmailExists = TryCatch(async(req, res) => {
     const { email } = req.body;

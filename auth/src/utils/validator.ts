@@ -1,5 +1,5 @@
 import validator from 'validator'
-import { IUser } from '../model/User';
+import { IUser } from '../model/User.js';
 
 export const validate = (data: IUser) => {
   const mandatoryField = ["email", "password"];

@@ -1,7 +1,7 @@
 import express from "express";
-import { isAuth, isSeller } from "../middleware/isAuth";
-import { addRestaruant, fetchMyRestaurant, fetchSingleRestaurant, getNearbyRestaurant, updateRestaurant, updateStatusRestaurant } from "../controllers/restaruant";
-import uploadFile from "../middleware/multer";
+import { isAuth, isSeller } from "../middleware/isAuth.js";
+import { addRestaruant, fetchMyRestaurant, fetchSingleRestaurant, getNearbyRestaurant, updateRestaurant, updateStatusRestaurant } from "../controllers/restaruant.js";
+import uploadFile from "../middleware/multer.js";
 
 const router = express.Router();
 

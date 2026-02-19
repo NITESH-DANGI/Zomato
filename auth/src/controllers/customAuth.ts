@@ -1,7 +1,7 @@
-import TryCatch from "../middlewares/trycatch";
-import { validate } from "../utils/validator";
+import TryCatch from "../middlewares/trycatch.js";
+import { validate } from "../utils/validator.js";
 import jwt from "jsonwebtoken";
-import User from "../model/User";
+import User from "../model/User.js";
 import bcrypt from "bcrypt";
 
 export const register = TryCatch(async (req, res) => {

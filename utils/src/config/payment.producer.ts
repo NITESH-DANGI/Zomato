@@ -1,4 +1,4 @@
-import { getChannel } from "./rabbitmq";
+import { getChannel } from "./rabbitmq.js";
 
 export const publishPaymentSuccess = async (payload: {
   orderId: string;
