@@ -46,12 +46,14 @@ const schema = new mongoose_1.Schema({
     },
     image: {
         type: String,
-        required: true,
     },
     role: {
         type: String,
         default: null,
     },
+    password: {
+        type: String,
+    }
 }, {
     timestamps: true,
 });
