@@ -10,7 +10,6 @@ export const register = TryCatch(async (req, res) => {
   const { name, email, password } = req.body;
 
   req.body.password = await bcrypt.hash(password, 10);
-  req.body.role = "user";
 
   const user = await User.create(req.body);
 
@@ -21,6 +20,7 @@ export const register = TryCatch(async (req, res) => {
   const reply = {
     email: user.email,
     _id: user._id,
+    role: user.role,
   };
 
   res.cookie("token", token, {
@@ -31,22 +31,23 @@ export const register = TryCatch(async (req, res) => {
 
   res.status(201).json({
     user: reply,
-    message: "Registered Successfully", 
+    token,
+    message: "Registered Successfully",
   });
 });
 
 export const login = TryCatch(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) throw new Error("Invalid Credentials");
+  if (!email || !password) throw new Error("Please provide email and password");
 
   const user = await User.findOne({ email });
 
-  if (!user) throw new Error("Invalid Credentials");
+  if (!user) throw new Error("No user found, please sign up first");
 
   const match = await bcrypt.compare(password, user.password);
 
-  if (!match) throw new Error("Invalid Credentials");
+  if (!match) throw new Error("Invalid credentials");
 
   const token = jwt.sign({ user }, process.env.JWT_SEC as string, {
     expiresIn: 3600,
@@ -55,6 +56,7 @@ export const login = TryCatch(async (req, res) => {
   const reply = {
     email: user.email,
     _id: user._id,
+    role: user.role,
   };
 
   res.cookie("token", token, {
@@ -65,6 +67,7 @@ export const login = TryCatch(async (req, res) => {
 
   res.status(200).json({
     user: reply,
+    token,
     message: "Login Successfully",
   });
 });
