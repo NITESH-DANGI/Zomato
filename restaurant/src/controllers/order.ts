@@ -95,7 +95,7 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
     restaurant.autoLocation.coordinates[0],
   );
 
-  let subtotal = 0;
+  let subtotal = 0;        
 
   const orderItems = cartItems.map((cart) => {
     const item = cart.itemId;
