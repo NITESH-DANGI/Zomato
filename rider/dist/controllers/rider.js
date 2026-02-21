@@ -1,6 +1,6 @@
-import TryCatch from "../middleware/trycatch.js";
-import getBuffer from "../config/datauri.js";
 import axios from "axios";
+import getBuffer from "../config/datauri.js";
+import TryCatch from "../middleware/trycatch.js";
 import { Rider } from "../model/Rider.js";
 export const addRiderProfile = TryCatch(async (req, res) => {
     const user = req.user;
@@ -11,7 +11,7 @@ export const addRiderProfile = TryCatch(async (req, res) => {
     }
     if (user.role !== "rider") {
         return res.status(403).json({
-            message: "Only rider can create roder profile",
+            message: "Only riders can create rider profile",
         });
     }
     const file = req.file;
@@ -22,12 +22,12 @@ export const addRiderProfile = TryCatch(async (req, res) => {
     }
     const fileBuffer = getBuffer(file);
     if (!fileBuffer?.content) {
-        return res.status(403).json({
-            message: "Failed to gernate image buffer",
+        return res.status(500).json({
+            message: "Failed to generate image buffer",
         });
     }
     const { data: uploadResult } = await axios.post(`${process.env.UTILS_SERVICE}/api/upload`, {
-        Buffer: fileBuffer.content,
+        buffer: fileBuffer.content,
     });
     const { phoneNumber, aadharNumber, drivingLicenseNumber, latitude, longitude, } = req.body;
     if (!phoneNumber ||
@@ -61,7 +61,7 @@ export const addRiderProfile = TryCatch(async (req, res) => {
         isVerified: false,
     });
     return res.status(201).json({
-        message: "Rider profile create successfully",
+        message: "Rider profile created successfully",
         riderProfile,
     });
 });
@@ -75,7 +75,7 @@ export const fetchMyProfile = TryCatch(async (req, res) => {
     const account = await Rider.findOne({ userId: user._id });
     res.json(account);
 });
-export const toggleRiderAvailblity = TryCatch(async (req, res) => {
+export const toggleRiderAvailablity = TryCatch(async (req, res) => {
     const user = req.user;
     if (!user) {
         return res.status(401).json({
@@ -84,7 +84,7 @@ export const toggleRiderAvailblity = TryCatch(async (req, res) => {
     }
     if (user.role !== "rider") {
         return res.status(403).json({
-            message: "Only rider can create roder profile",
+            message: "Only riders can create rider profile",
         });
     }
     const { isAvailble, latitude, longitude } = req.body;
@@ -94,8 +94,8 @@ export const toggleRiderAvailblity = TryCatch(async (req, res) => {
         });
     }
     if (latitude === undefined || longitude === undefined) {
-        return res.status(403).json({
-            message: "Location is required",
+        return res.status(400).json({
+            message: "location is required",
         });
     }
     const rider = await Rider.findOne({
@@ -114,7 +114,7 @@ export const toggleRiderAvailblity = TryCatch(async (req, res) => {
     rider.isAvailble = isAvailble;
     rider.location = {
         type: "Point",
-        coordinates: [longitude, latitude]
+        coordinates: [longitude, latitude],
     };
     rider.lastActiveAt = new Date();
     await rider.save();
@@ -122,4 +122,103 @@ export const toggleRiderAvailblity = TryCatch(async (req, res) => {
         message: isAvailble ? "Rider is now online" : "Rider is now offline",
         rider,
     });
+});
+export const acceptOrder = TryCatch(async (req, res) => {
+    const riderUserId = req.user?._id;
+    const { orderId } = req.params;
+    if (!riderUserId) {
+        return res.status(400).json({
+            message: "Please Login",
+        });
+    }
+    const rider = await Rider.findOne({ userId: riderUserId, isAvailble: true });
+    if (!rider) {
+        return res.status(404).json({ message: "rider not found" });
+    }
+    try {
+        const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE}/api/order/assign/rider`, {
+            orderId,
+            riderId: rider._id.toString(),
+            riderUserId: rider.userId,
+            riderName: rider.picture,
+            riderPhone: rider.phoneNumber,
+        }, {
+            headers: {
+                "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+            },
+        });
+        if (data.success) {
+            const riderDetails = await Rider.findOneAndUpdate({
+                userId: riderUserId,
+                isAvailble: true,
+            }, { isAvailble: false }, { new: true });
+            res.json({ message: "Order accepted" });
+        }
+    }
+    catch (error) {
+        res.status(400).json({
+            message: "Order already taken",
+        });
+    }
+});
+export const fetchMyCurrentOrder = TryCatch(async (req, res) => {
+    const riderUserId = req.user?._id;
+    if (!riderUserId) {
+        return res.status(400).json({
+            message: "Please Login",
+        });
+    }
+    const rider = await Rider.findOne({
+        userId: riderUserId,
+        isVerified: true,
+    });
+    if (!rider) {
+        return res.status(404).json({ message: "rider not found" });
+    }
+    try {
+        const { data } = await axios.get(`${process.env.RESTAURANT_SERVICE}/api/order/current/rider?riderId=${rider._id}`, {
+            headers: {
+                "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+            },
+        });
+        res.json({
+            order: data,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.response.data.message,
+        });
+    }
+});
+export const updateOrderStatus = TryCatch(async (req, res) => {
+    const userId = req.user?._id;
+    if (!userId) {
+        return res.status(401).json({
+            message: "Please Login",
+        });
+    }
+    const rider = await Rider.findOne({ userId: userId });
+    if (!rider) {
+        return res.status(404).json({
+            message: "Please Login",
+        });
+    }
+    const { orderId } = req.params;
+    try {
+        const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE}/api/order/update/status/rider`, { orderId }, {
+            headers: {
+                "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+            },
+        });
+        res.json({
+            message: data.message,
+        });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: error.response.data.message,
+        });
+    }
 });

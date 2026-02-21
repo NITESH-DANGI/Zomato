@@ -1,4 +1,4 @@
-import User from "../model/User";
+import User from "../model/User.js";
 import jwt from "jsonwebtoken";
 import TryCatch from "../middlewares/trycatch.js";
 import { AuthenticatedRequest } from "../middlewares/isAuth.js";

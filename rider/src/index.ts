@@ -5,30 +5,24 @@ import cors from "cors";
 import riderRoutes from "./routes/rider.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import { startOrderReadyConsumer } from "./config/orderReady.consumer.js";
-dotenv.config();
-await connectRabbitMQ();
-startOrderReadyConsumer()
 
+dotenv.config();
+console.log("started")
+await connectRabbitMQ();
+console.log("pro")
+startOrderReadyConsumer();
+console.log("1 start")
 const app = express();
 app.use(express.json());
 app.use(cors());
-const PORT = process.env.PORT || 5001;
 
 app.use("/api/rider", riderRoutes);
+console.log("2 start")
+app.listen(process.env.PORT, () => {
+  console.log(`Rider service is running on port ${process.env.PORT}`);
+  console.log("3 start")
+  connectDB();
+  console.log("4 start")
 
-const startServer = async () => {
-  try {
-    await connectRabbitMQ();
+});
 
-    await connectDB();
-
-    app.listen(PORT, () => {
-      console.log(`Restaurant service running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Server startup failed:", error);
-    process.exit(1);
-  }
-};
-
-startServer();
