@@ -12,7 +12,7 @@
 
 ## 🚀 Overview
 
-This repository contains the core backend infrastructure for the **Tomato** platform. Built with a scalable microservices architecture, it handles high-concurrency operations for a modern food delivery ecosystem.
+This repository contains the core backend infrastructure for the **Zomato** platform. Built with a scalable microservices architecture, it handles high-concurrency operations for a modern food delivery ecosystem.
 
 ## 🏗️ Architecture
 
